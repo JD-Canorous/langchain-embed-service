@@ -1,15 +1,18 @@
-import fitz
+import fitz  # PyMuPDF
 import uuid
 
 
 class FastLaneExtractor:
 
     def extract_page(self, pdf_path, page_number):
+        """
+        Extract text and images from a specific page using PyMuPDF
+        """
 
         doc = fitz.open(pdf_path)
         page = doc[page_number - 1]
 
-        # -------- TEXT --------
+        # -------- TEXT EXTRACTION --------
         text = page.get_text() or ""
 
         # -------- IMAGE EXTRACTION --------
