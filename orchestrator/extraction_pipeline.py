@@ -1,33 +1,28 @@
+import fitz
+
 from router.smart_router import route_pdf
 from extractors.fast_lane import FastLaneExtractor
-
-# Deep lane will be plugged later
-# from extractors.deep_lane import DeepLaneExtractor
+from extractors.deep_lane import DeepLaneExtractor
 
 
 class ExtractionPipeline:
 
     def __init__(self):
+
         self.fast_extractor = FastLaneExtractor()
-        # self.deep_extractor = DeepLaneExtractor()
+        self.deep_extractor = DeepLaneExtractor()
 
     def run(self, pdf_path):
 
-        # -------- STEP 1 : ROUTER --------
-        routing_result = route_pdf(pdf_path)
+        lanes = route_pdf(pdf_path)
 
-        document_id = routing_result["document_id"]
-        page_routes = routing_result["pages"]
+        doc = fitz.open(pdf_path)
 
-        extracted_pages = []
+        results = []
 
-        # -------- STEP 2 : PAGE EXTRACTION --------
-        for page_info in page_routes:
+        for page_number, lane in lanes.items():
 
-            page_number = page_info["page_number"]
-            lane = page_info["lane"]
-
-            if lane == "fast":
+            if lane == "fast_lane":
 
                 page_result = self.fast_extractor.extract_page(
                     pdf_path,
@@ -35,21 +30,14 @@ class ExtractionPipeline:
                 )
 
             else:
-                # Placeholder until deep lane implemented
-                page_result = {
-                    "page_number": page_number,
-                    "text": "",
-                    "images": [],
-                    "metadata": {
-                        "lane": "deep",
-                        "status": "Deep lane not implemented yet"
-                    }
-                }
 
-            extracted_pages.append(page_result)
+                # Deep lane works whole document
+                page_result = self.deep_extractor.extract_document(pdf_path)
 
-        # -------- STEP 3 : RETURN UNIFIED OUTPUT --------
-        return {
-            "document_id": document_id,
-            "pages": extracted_pages
-        }
+                # Break loop since deep lane handles full doc
+                results.append(page_result)
+                break
+
+            results.append(page_result)
+
+        return results

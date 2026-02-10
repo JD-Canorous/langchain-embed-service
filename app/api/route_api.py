@@ -20,4 +20,8 @@ async def extract_pdf(file: UploadFile = File(...)):
         return result
 
     finally:
-        os.remove(temp_path)
+        try:
+            os.remove(temp_path)
+        except PermissionError:
+            pass
+
